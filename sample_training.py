@@ -11,9 +11,6 @@ from torch.cuda.amp import autocast
 import Metrics
 import Config
 
-
-config = Config.ImageNet_Local_Config("ResNet34", "config1", continue_training=False)
-
 def run():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225])
@@ -55,6 +52,7 @@ def run():
         elif config.training_parameters["step_scheduler_per"] == "batch": max_steps = config.training_parameters["epochs"] * len(trainloader) # for stepping scheduler every batch
         schedule = config.get_scheduler(optimizer,max_steps)
 
+        # from https://pytorch.org/docs/stable/notes/amp_examples.html
         scaler = torch.cuda.amp.GradScaler()
 
         start_epoch = 0
@@ -86,7 +84,9 @@ def run():
                 with autocast():
                     preds = model(Variable(inputs.cuda()))
                     loss = criterion(preds.cuda(), labels.cuda())
+                # loss.backward()
                 scaler.scale(loss).backward()
+                # optimizer.step()
                 scaler.step(optimizer)
                 scaler.update()
                 _,predicted = preds.max(1)
@@ -97,17 +97,12 @@ def run():
             if config.training_parameters["step_scheduler_per"] == "epoch": metrics.save_lr_metrics(config,epoch,0,config.get_lr(optimizer),loss.item()) # per epoch lr + loss logging
             if config.training_parameters["step_scheduler_per"] == "epoch": schedule.step() # per epoch scheduler step
             metrics.epoch_update(config.test(model, testloader))
-            state = {
-                'epoch': epoch,
-                'model_state': model.state_dict(),
-                'optimizer_state': optimizer.state_dict(),
-                'training_accuracy': metrics.per_epoch_training_accuracies[-1],
-                'testing_accuracy':  metrics.per_epoch_testing_accuracies[-1]
-            }
-            config.save_at_checkpoint(epoch,state,config.get_weights_file_dir(metrics))
+            config.save_at_checkpoint(epoch,model.state_dict(),optimizer.state_dict(),schedule.state_dict(),metrics.per_epoch_training_accuracies[-1],metrics.per_epoch_testing_accuracies[-1],config.get_weights_file_dir(metrics))
             metrics.epoch_end_print()
             metrics.save_metrics(config)
         metrics.iteration_update()
 
 if __name__ == '__main__':
+    # config = get_config(sys.argv)
+    config = Config.ImageNet_Local_Config("ResNet34", "config1", continue_training=False)
     run()

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import time
 import os
 import pandas as pd
@@ -35,7 +34,8 @@ class Metrics:
     def get_epoch_runtime(self):
         return str((self.epoch_end_time - self.epoch_start_time) / 60) # in minutes
     def epoch_end_print(self):
-        print("Iteration:", len(self.per_iteration_training_accuracies), "| Epoch:", len(self.per_epoch_training_accuracies), "| Training Accuracy:", int(self.per_epoch_training_accuracies[-1]), "| Training Loss:", int(self.per_epoch_training_losses[-1]), "| Testing Accuracy:", int(self.per_epoch_testing_accuracies[-1]), "| Runtime (mins):", self.get_epoch_runtime())
+        # print("Iteration:", len(self.per_iteration_training_accuracies), "| Epoch:", len(self.per_epoch_training_accuracies), "| Training Accuracy:", int(self.per_epoch_training_accuracies[-1]), "| Training Loss:", int(self.per_epoch_training_losses[-1]), "| Testing Accuracy:", int(self.per_epoch_testing_accuracies[-1]), "| Runtime (mins):", self.get_epoch_runtime())
+        print("Iteration:", len(self.per_iteration_training_accuracies), "| Epoch:", len(self.per_epoch_training_accuracies), "| Training Accuracy:", self.per_epoch_training_accuracies[-1], "| Training Loss:", self.per_epoch_training_losses[-1], "| Testing Accuracy:", self.per_epoch_testing_accuracies[-1], "| Runtime (mins):", self.get_epoch_runtime())
         print("=== === ===")
     def save_metrics(self, c):
         file_path = c.weights_save_dir + c.parameter_config + c.slash + "metrics.csv"

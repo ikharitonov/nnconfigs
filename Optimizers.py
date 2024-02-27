@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-
 import torch
 import math
 from typing import List
+
+# taken from https://github.com/facebookresearch/detectron2/blob/main/detectron2/solver/lr_scheduler.py
 
 class WarmupCosineLR(torch.optim.lr_scheduler._LRScheduler):
     def __init__(
@@ -36,6 +37,10 @@ class WarmupCosineLR(torch.optim.lr_scheduler._LRScheduler):
             * (1.0 + math.cos(math.pi * self.last_epoch / self.max_iters))
             for base_lr in self.base_lrs
         ]
+
+    # def _compute_values(self) -> List[float]:
+    #     # The new interface
+    #     return self.get_lr()
 
 def _get_warmup_factor_at_iter(
     method: str, iter: int, warmup_iters: int, warmup_factor: float
