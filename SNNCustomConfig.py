@@ -19,14 +19,14 @@ from pathlib import Path
 #         self.training_parameters = self.parser.training_parameters
 
 class SNNCustomConfig(BaseConfig):
-    def __init__(self, model_name, dataset_name, configuration_name, configuration_file=None, continue_training=False):
+    def __init__(self, cli_args=None, model_name=None, dataset_name=None, configuration_name=None, configuration_file=None, continue_training=False):
 
-        training_name = f"{model_name}_{dataset_name}"
-        super(BaseConfig,self).__init__(training_name, configuration_name, configuration_file, continue_training)
+        super(BaseConfig,self).__init__(cli_args, model_name, dataset_name, configuration_name, configuration_file, continue_training)
 
         self.base_path = Path.home() / 'RANCZLAB-NAS/iakov/produced/mnist_sequence_checkpoints'
         data_path = Path.home() / 'RANCZLAB-NAS/produced/'
         self.dirs = {
             "training": data_path / f'{dataset_name}.npy'
         }
-        self.weights_save_dir = self.base_path / training_name
+        self.weights_save_dir = self.base_path / self.training_name
+        self.pretrained_weights_path = Path.home() / 'RANCZLAB-NAS/iakov/produced/mnist_classification_weights_matrix.npy'
