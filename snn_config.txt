@@ -5,6 +5,7 @@ init_type:"pretrained"
 grad_clipping:"true"
 grad_clipping_max_norm:1
 membrane_time_constant_tao:0.01
+torch_device:cuda
 batch_size:20
 iterations:1
 epochs:75

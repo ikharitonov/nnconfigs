@@ -12,7 +12,7 @@ from torch.utils.data import Dataset, DataLoader
 import snntorch as snn
 
 from SNNCustomConfig import SNNCustomConfig
-import Metrics
+from Metrics import Metrics
 
 def mkdir(path):
     if not os.path.exists(path): os.makedirs(path)
@@ -107,6 +107,8 @@ class Net(nn.Module):
 
 def run():
 
+    device = torch.device(config.params["torch_device"])
+
     tao_mem = config.params["membrane_time_constant_tao"] # 10ms membrane time constant
     timestep = 1/config.params["dataset_sampling_frequency"]
     beta = np.exp(-timestep / tao_mem)
@@ -188,10 +190,14 @@ def run():
 
             loss_hist.append(batch_loss.item())
             metrics.batch_update(batch_loss.item())
-            if config.params["step_scheduler_per"] == "batch": metrics.save_lr_metrics(config,epoch,i,config.get_lr(optimizer),batch_loss.item()); scheduler.step() # per batch lr + loss logging + per batch scheduler step
+            if config.params["step_scheduler_per"] == "batch":
+                metrics.save_lr_metrics(config,epoch,i,config.get_lr(optimizer),batch_loss.item())
+                scheduler.step() # per batch lr + loss logging + per batch scheduler step
             # if config.training_parameters["step_scheduler_per"] == "batch": scheduler.step() # per batch scheduler step
         # if config.params["scheduler_type"] != 'none': scheduler.step()
-        if config.params["step_scheduler_per"] == "epoch": metrics.save_lr_metrics(config,epoch,0,config.get_lr(optimizer),batch_loss.item()); scheduler.step() # per epoch lr + loss logging + per epoch scheduler step
+        if config.params["step_scheduler_per"] == "epoch":
+            metrics.save_lr_metrics(config,epoch,0,config.get_lr(optimizer),batch_loss.item())
+            scheduler.step() # per epoch lr + loss logging + per epoch scheduler step
         # if config.training_parameters["step_scheduler_per"] == "epoch": scheduler.step() # per epoch scheduler step
         metrics.epoch_update()
         config.save_at_checkpoint(epoch,model.state_dict(),optimizer.state_dict(),scheduler.state_dict(),loss_hist,config.get_weights_file_dir(metrics))
@@ -210,8 +216,8 @@ if __name__ == '__main__':
     ingest_numpy_dtype = np.uint8
 
     dtype = torch.float32
-    device = torch.device('cuda')
     
+    # config = SNNCustomConfig()
     config = SNNCustomConfig(cli_args=sys.argv)
     # config = SNNCustomConfig(model_name="SNN1", dataset_name="mnist_sequences_10hz", configuration_name="config1", continue_training=False)
 
