@@ -64,7 +64,8 @@ class ConfigParser:
             self.parse_txt_contents(self.configuration_file)
     
     def load_default_config(self):
-        self.parse_txt_contents(os.path.dirname(__file__) + self.config.slash + 'DefaultConfigs' + self.config.slash + self.config.name + '.txt')
+        pass
+        # self.parse_txt_contents(os.path.dirname(__file__) + self.config.slash + 'DefaultConfigs' + self.config.slash + self.config.name + '.txt')
 
     def parse_txt_contents(self,path):
         lines = []

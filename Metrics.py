@@ -6,36 +6,39 @@ from datetime import datetime
 
 class Metrics:
     def __init__(self):
-        self.per_iteration_training_accuracies = []
+        # self.per_iteration_training_accuracies = []
         self.per_iteration_training_losses = []
-        self.per_iteration_testing_accuracies = []
+        # self.per_iteration_testing_accuracies = []
     def init_iteration(self):
-        self.per_epoch_training_accuracies = []
+        # self.per_epoch_training_accuracies = []
         self.per_epoch_training_losses = []
-        self.per_epoch_testing_accuracies = []
+        # self.per_epoch_testing_accuracies = []
     def init_epoch(self):
         self.epoch_loss = 0
-        self.sum_of_per_batch_training_accuracies = 0
+        # self.sum_of_per_batch_training_accuracies = 0
         self.batch_count = 0
         self.epoch_start_time = time.time()
-    def batch_update(self, num_correct, num_total, loss):
-        self.sum_of_per_batch_training_accuracies += (100*(num_correct/num_total))
+    # def batch_update(self, num_correct, num_total, loss):
+    def batch_update(self, loss):
+        # self.sum_of_per_batch_training_accuracies += (100*(num_correct/num_total))
         self.batch_count += 1
         self.epoch_loss += loss
-    def epoch_update(self, epoch_testing_accuracy):
-        self.per_epoch_training_accuracies.append(self.sum_of_per_batch_training_accuracies/self.batch_count)
+    # def epoch_update(self, epoch_testing_accuracy):
+    def epoch_update(self):
+        # self.per_epoch_training_accuracies.append(self.sum_of_per_batch_training_accuracies/self.batch_count)
         self.per_epoch_training_losses.append(self.epoch_loss/self.batch_count)
-        self.per_epoch_testing_accuracies.append(epoch_testing_accuracy)
+        # self.per_epoch_testing_accuracies.append(epoch_testing_accuracy)
         self.epoch_end_time = time.time()
     def iteration_update(self):
-        self.per_iteration_training_accuracies.append(self.per_epoch_training_accuracies)
+        # self.per_iteration_training_accuracies.append(self.per_epoch_training_accuracies)
         self.per_iteration_training_losses.append(self.per_epoch_training_losses)
-        self.per_iteration_testing_accuracies.append(self.per_epoch_testing_accuracies)
+        # self.per_iteration_testing_accuracies.append(self.per_epoch_testing_accuracies)
     def get_epoch_runtime(self):
         return str((self.epoch_end_time - self.epoch_start_time) / 60) # in minutes
     def epoch_end_print(self):
         # print("Iteration:", len(self.per_iteration_training_accuracies), "| Epoch:", len(self.per_epoch_training_accuracies), "| Training Accuracy:", int(self.per_epoch_training_accuracies[-1]), "| Training Loss:", int(self.per_epoch_training_losses[-1]), "| Testing Accuracy:", int(self.per_epoch_testing_accuracies[-1]), "| Runtime (mins):", self.get_epoch_runtime())
-        print("Iteration:", len(self.per_iteration_training_accuracies), "| Epoch:", len(self.per_epoch_training_accuracies), "| Training Accuracy:", self.per_epoch_training_accuracies[-1], "| Training Loss:", self.per_epoch_training_losses[-1], "| Testing Accuracy:", self.per_epoch_testing_accuracies[-1], "| Runtime (mins):", self.get_epoch_runtime())
+        # print("Iteration:", len(self.per_iteration_training_accuracies), "| Epoch:", len(self.per_epoch_training_accuracies), "| Training Accuracy:", self.per_epoch_training_accuracies[-1], "| Training Loss:", self.per_epoch_training_losses[-1], "| Testing Accuracy:", self.per_epoch_testing_accuracies[-1], "| Runtime (mins):", self.get_epoch_runtime())
+        print("Iteration:", len(self.per_iteration_training_losses), "| Epoch:", len(self.per_epoch_training_losses), "| Training Loss:", self.per_epoch_training_losses[-1], "| Runtime (mins):", self.get_epoch_runtime())
         print("=== === ===")
     def save_metrics(self, c):
         file_path = c.weights_save_dir + c.parameter_config + c.slash + "metrics.csv"

@@ -104,5 +104,5 @@ def run():
 
 if __name__ == '__main__':
     # config = get_config(sys.argv)
-    config = Config.ImageNet_Local_Config("ResNet34", "config1", continue_training=False)
+    config = Config.ImageNet_Local_Config(model_name="ResNet34", dataset_name="ImageNet", configuration_name="config1", continue_training=False)
     run()
