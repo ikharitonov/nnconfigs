@@ -38,33 +38,36 @@ class Metrics:
     def epoch_end_print(self):
         # print("Iteration:", len(self.per_iteration_training_accuracies), "| Epoch:", len(self.per_epoch_training_accuracies), "| Training Accuracy:", int(self.per_epoch_training_accuracies[-1]), "| Training Loss:", int(self.per_epoch_training_losses[-1]), "| Testing Accuracy:", int(self.per_epoch_testing_accuracies[-1]), "| Runtime (mins):", self.get_epoch_runtime())
         # print("Iteration:", len(self.per_iteration_training_accuracies), "| Epoch:", len(self.per_epoch_training_accuracies), "| Training Accuracy:", self.per_epoch_training_accuracies[-1], "| Training Loss:", self.per_epoch_training_losses[-1], "| Testing Accuracy:", self.per_epoch_testing_accuracies[-1], "| Runtime (mins):", self.get_epoch_runtime())
-        print("Iteration:", len(self.per_iteration_training_losses), "| Epoch:", len(self.per_epoch_training_losses), "| Training Loss:", self.per_epoch_training_losses[-1], "| Runtime (mins):", self.get_epoch_runtime())
+        print("Iteration:", len(self.per_iteration_training_losses), "| Epoch:", len(self.per_epoch_training_losses)-1, "| Training Loss:", self.per_epoch_training_losses[-1], "| Runtime (mins):", self.get_epoch_runtime())
         print("=== === ===")
     def save_metrics(self, c):
-        file_path = c.weights_save_dir + c.parameter_config + c.slash + "metrics.csv"
+        file_path = c.weights_save_dir / c.configuration_name / "metrics.csv"
         if os.path.isfile(file_path):
             f = open(file_path, "a")
-            f.write(str(len(self.per_iteration_training_accuracies)) + ',' + str(len(self.per_epoch_training_accuracies)) + ',' + str(float(self.per_epoch_training_accuracies[-1])) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + str(float(self.per_epoch_testing_accuracies[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
+            # f.write(str(len(self.per_iteration_training_accuracies)) + ',' + str(len(self.per_epoch_training_accuracies)) + ',' + str(float(self.per_epoch_training_accuracies[-1])) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + str(float(self.per_epoch_testing_accuracies[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
+            f.write(str(len(self.per_iteration_training_losses)) + ',' + str(len(self.per_epoch_training_losses)) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
             f.close()
         else:
             f = open(file_path, "x")
-            f.write(str(c.training_parameters) + "\n")
-            f.write("Iteration,Epoch,Training Accuracy,Training Loss,Testing Accuracy,Runtime,Date and Time,Machine" + "\n")
-            f.write(str(len(self.per_iteration_training_accuracies)) + ',' + str(len(self.per_epoch_training_accuracies)) + ',' + str(float(self.per_epoch_training_accuracies[-1])) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + str(float(self.per_epoch_testing_accuracies[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
+            f.write(str(c.params) + "\n")
+            # f.write("Iteration,Epoch,Training Accuracy,Training Loss,Testing Accuracy,Runtime,Date and Time,Machine" + "\n")
+            # f.write(str(len(self.per_iteration_training_accuracies)) + ',' + str(len(self.per_epoch_training_accuracies)) + ',' + str(float(self.per_epoch_training_accuracies[-1])) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + str(float(self.per_epoch_testing_accuracies[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
+            f.write("Iteration,Epoch,Training Loss,Runtime,Date and Time,Machine" + "\n")
+            f.write(str(len(self.per_iteration_training_losses)) + ',' + str(len(self.per_epoch_training_losses)) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
             f.close()
     def load_interrupted_iteration(self,c):
-        file_path = c.weights_save_dir + c.parameter_config + c.slash + "metrics.csv"
+        file_path = c.weights_save_dir / c.configuration_name / "metrics.csv"
         df = pd.read_csv(file_path, skiprows=1)
-        self.per_epoch_training_accuracies = df["Training Accuracy"].iloc[0:].tolist()
+        # self.per_epoch_training_accuracies = df["Training Accuracy"].iloc[0:].tolist()
         self.per_epoch_training_losses = df["Training Loss"].iloc[0:].tolist()
-        self.per_epoch_testing_accuracies = df["Testing Accuracy"].iloc[0:].tolist()
+        # self.per_epoch_testing_accuracies = df["Testing Accuracy"].iloc[0:].tolist()
     def save_lr_metrics(self, c, epoch, batch, lr, loss):
-        file_path = c.weights_save_dir + c.parameter_config + c.slash + "lr_metrics.csv"
+        file_path = c.weights_save_dir / c.configuration_name / "lr_metrics.csv"
         if os.path.isfile(file_path):
             f = open(file_path, "a")
         else:
             f = open(file_path, "x")
-            f.write("<<<logged per " + c.training_parameters["step_scheduler_per"] + ">>>" + "\n")
+            f.write("<<<logged per " + c.params["step_scheduler_per"] + ">>>" + "\n")
             f.write("epoch,batch,lr,loss,date and time,machine" + "\n")
         f.write(str(epoch) + ',' + str(batch) + ',' + str(float(lr)) + ',' + str(float(loss)) + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
         f.close()

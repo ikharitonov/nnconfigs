@@ -48,15 +48,15 @@ class ConfigParser:
 
         if self.config.continue_training:
             self.configuration_file = self.config.weights_save_dir / self.config.configuration_name / f"{self.config.configuration_name}.txt"
-            print("ConfigParser: Loading configuration from " + self.configuration_file)
+            print("ConfigParser: Loading configuration from " + self.configuration_file.name)
 
         if not self.configuration_file:
-            print("ConfigParser: Configuration file was not provided. Using default configuration for \""+self.config.name+"\".")
+            print("ConfigParser: Configuration file was not provided. Using default configuration for \""+self.config.training_name+"\".")
             self.loading_defaults = True
             raise NotImplementedError('Default configurations are not generally implemented.')
             # self.load_default_config()
         elif not os.path.isfile(self.configuration_file):
-            print("ConfigParser: Configuration file with provided name was not found. Using default configuration for \""+self.config.name+"\".")
+            print("ConfigParser: Configuration file with provided name was not found. Using default configuration for \""+self.config.training_name+"\".")
             self.loading_defaults = True
             raise NotImplementedError('Default configurations are not generally implemented.')
             # self.load_default_config()
@@ -101,7 +101,7 @@ class ConfigParser:
         if not os.path.isfile(path):
             print("ConfigParser: Could not save configuration file \"" + f"{self.config.configuration_name}.txt" + "\" into folder " + new_filepath)
             exit()
-        print("ConfigParser: Saved configuration file \"" + f"{self.config.configuration_name}.txt" + "\" into folder " + new_filepath + " successfully.")
+        print("ConfigParser: Saved configuration file \"" + f"{self.config.configuration_name}.txt" + "\" into folder " + new_filepath.name+ " successfully.")
         if not self.loading_defaults:
             os.remove(self.configuration_file)
-            print("ConfigParser: Configuration file removed from " + self.config.base_path + " successfully.")
+            print("ConfigParser: Configuration file removed from " + self.config.base_path.name + " successfully.")

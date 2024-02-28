@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import socket
 import torch
 import numpy as np
 from pathlib import Path
@@ -20,11 +21,6 @@ def get_cli_args(args):
     out_dict['configuration_file'] = None
     out_dict['continue_training'] = False
 
-    for key in out_dict.keys():
-        if key not in args or f"--{key}" not in args or f"-{key}" not in args:
-            print(f"Error: {key} missing from the command line arguments. Exiting.")
-            exit()
-
     if len(args) > 1:
         if args[1]=='--help':
             print("PARAMERES:")
@@ -40,6 +36,11 @@ def get_cli_args(args):
             TODO: create txt file with one of the default configs
             """
             raise NotImplementedError("not implemented")
+
+    for key in out_dict.keys():
+        if key not in args and f"--{key}" not in args and f"-{key}" not in args:
+            print(f"Error: {key} missing from the command line arguments. Exiting.")
+            exit()
 
     for i in range(1,len(args),2):
         if args[i]=='--model_name':
@@ -72,15 +73,20 @@ class BaseConfig:
             configuration_file = parsed_args["configuration_file"]
             continue_training = parsed_args["continue_training"]
 
+        self.model_name = model_name
+        self.dataset_name = dataset_name
         self.training_name = f"{model_name}_{dataset_name}"
         self.configuration_name = configuration_name
         self.continue_training = continue_training
+        self.running_machine = socket.gethostname()
+        self.weights_save_dir = self.base_path / self.training_name
         self.previous_weights_file = ''
-        self.save_checkpoints = [1,25,50,75,100,125,150,175,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000,3100,3200,3300,3400,3500,3600,3700,3800,3900,4000]
         # self.training_parameters = {} # initialized in child classes
         self.parser = ConfigParser.ConfigParser(configuration_file, self)
         self.params = self.parser.training_parameters
-    
+        # self.save_checkpoints = [1,25,50,75,100,125,150,175,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000,3100,3200,3300,3400,3500,3600,3700,3800,3900,4000]
+        self.save_checkpoints = [x for x in range(self.params["epochs"])]
+
     def update_weights_save_dir(self):
         self.weights_save_dir = self.base_path + self.slash + self.training_name + self.weights_dataset_name + self.slash
     
@@ -159,23 +165,23 @@ class BaseConfig:
         # checks if the folder for storing the weights already exists, if not, creates it
         if not os.path.exists(self.weights_save_dir):
             os.makedirs(self.weights_save_dir)
-            os.makedirs(self.weights_save_dir + self.slash + self.configuration_name)
-        if not os.path.exists(self.weights_save_dir + self.slash + self.configuration_name):
-            os.makedirs(self.weights_save_dir + self.slash + self.configuration_name)
+            os.makedirs(self.weights_save_dir / self.configuration_name)
+        if not os.path.exists(self.weights_save_dir / self.configuration_name):
+            os.makedirs(self.weights_save_dir / self.configuration_name)
         # transferring loaded config file into the training directory
         if not self.continue_training: self.parser.transfer_config_file(self.weights_save_dir / self.configuration_name)
     
     def get_last_weights_file_path(self):
         # called if we want to continue training the model from last epoch/weights file
         # returns the path + file name of last weights file at which training was interrupted to be loaded in training script + the last epoch
-        p = self.weights_save_dir + self.configuration_name + self.slash
+        p = self.weights_save_dir / self.configuration_name
         file_list = [f for f in os.listdir(p) if os.path.isfile(os.path.join(p, f))]
-        if os.path.isfile(p + "metrics.csv"):
+        if os.path.isfile(p / "metrics.csv"):
             file_list.remove("metrics.csv")
-        if os.path.isfile(p + "lr_metrics.csv"):
+        if os.path.isfile(p / "lr_metrics.csv"):
             file_list.remove("lr_metrics.csv")
-        if os.path.isfile(p + self.configuration_name + ".txt"):
-            file_list.remove(self.configuration_name + ".txt")
+        if os.path.isfile(p / f"{self.configuration_name}.txt"):
+            file_list.remove(f"{self.configuration_name}.txt")
         epoch_list = []
         for file in file_list:
             string_split = file.split('_')
@@ -185,10 +191,10 @@ class BaseConfig:
                     epoch_ind = string_split.index(e)+1
             epoch_list.append(int(string_split[epoch_ind]))
         if len(epoch_list) == 0:
-            print("Error: no previous model weights found in the directory " + p)
+            print("Error: no previous model weights found in the directory " + p.name)
             print("Set continue_training to False")
             exit()
-        return p + file_list[epoch_list.index(max(epoch_list))], max(epoch_list)
+        return p / file_list[epoch_list.index(max(epoch_list))], max(epoch_list)
     
     def save_at_checkpoint(self,epoch,model_state_dict,optimizer_state_dict,scheduler_state_dict,loss_history,current_weights_file,training_accuracy=None,testing_accuracy=None):
         # This function saves the model weights at every epoch and deletes the previous epoch weights, unless it's epoch 1 or a checkpoint
