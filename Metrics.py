@@ -5,7 +5,8 @@ import pandas as pd
 from datetime import datetime
 
 class Metrics:
-    def __init__(self):
+    def __init__(self, parameter_definitions=None):
+        # Accepts a nested list with dictionaries. Each dictionary is expected to have key-value pairs for "parameter_name", "display_name", "update_at"
         # self.per_iteration_training_accuracies = []
         self.per_iteration_training_losses = []
         # self.per_iteration_testing_accuracies = []

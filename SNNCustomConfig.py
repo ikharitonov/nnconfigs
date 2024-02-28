@@ -1,23 +1,6 @@
 from Config import BaseConfig
 from pathlib import Path
 
-# class CustomConfig(BaseConfig):
-#     def __init__(self, model_type, configuration_name, configuration_filename='', continue_training=False):
-
-#         super(BaseConfig,self).__init__(model_type, configuration_name, continue_training)
-
-#         # self.name = 'ImageNet_Local_Config'
-#         # self.running_machine = "Local"
-#         self.base_path = "C:\\Users\\sarfi\\Desktop"
-#         self.base_data_path = "C:\\Users\\sarfi\\Desktop\\data"
-#         self.slash = "\\"
-#         self.dirs = {"training": self.base_data_path + "\\imagenet\\test_train",
-#                     "testing": self.base_data_path + "\\imagenet\\test_val"}
-#         self.weights_dataset_name = "-ImageNet_Weights"
-#         self.weights_save_dir = self.base_path + self.slash + self.model_type + self.weights_dataset_name + self.slash
-#         self.parser = ConfigParser.ConfigParser(configuration_filename, self)
-#         self.training_parameters = self.parser.training_parameters
-
 class SNNCustomConfig(BaseConfig):
     def __init__(self, cli_args=None, model_name=None, dataset_name=None, configuration_name=None, configuration_file=None, continue_training=False):
 

@@ -3,13 +3,12 @@
 import os
 import socket
 import torch
-import numpy as np
-from pathlib import Path
-from torch.autograd import Variable
-from tqdm import tqdm
+# import numpy as np
+# from pathlib import Path
+# from torch.autograd import Variable
 import Optimizers as Optimizers
 import ConfigParser as ConfigParser
-from torch.utils.data import DataLoader
+from Metrics import Metrics
 
 def get_cli_args(args):
 
@@ -86,6 +85,9 @@ class BaseConfig:
         self.params = self.parser.training_parameters
         # self.save_checkpoints = [1,25,50,75,100,125,150,175,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000,3100,3200,3300,3400,3500,3600,3700,3800,3900,4000]
         self.save_checkpoints = [x for x in range(self.params["epochs"])]
+        self.data_shape = None
+        self.start_epoch = 0
+        self.metrics = Metrics()
 
     def update_weights_save_dir(self):
         self.weights_save_dir = self.base_path + self.slash + self.training_name + self.weights_dataset_name + self.slash
@@ -93,72 +95,10 @@ class BaseConfig:
     def update_training_parameters(self):
         self.parser = ConfigParser.ConfigParser('void', self)
         self.params = self.parser.training_parameters
-    
-    # def get_model(self, params=None):
-    #     name = self.training_name.split('_')[0]
-    #     if name == 'VGG16':
-    #         return VGG.VGG16(self)
-    #     elif name == 'ResNet34':
-    #         temp_training_name = self.training_name
-    #         input_shape = (self.training_parameters["input_channels"],self.training_parameters["image_dim"],self.training_parameters["image_dim"])
-    #         first_conv_flex = False
-    #         if temp_training_name.split('_')[1][0] == 'c':
-    #             first_conv_flex = True
-    #             temp_training_name = temp_training_name[:9] + temp_training_name[10:]
-    #         flex_layers = []
-    #         for char in temp_training_name.split('_')[1][:4]:
-    #             if int(char): flex_layers.append(True)
-    #             else: flex_layers.append(False)
-    #         if temp_training_name.split('_')[1][:4]=='0000':
-    #             return ResNet.resnet34(input_shape, flex_layers = flex_layers, num_classes=self.training_parameters["model_out_classes"],first_conv_flex=first_conv_flex)
-    #         else:
-    #             return ResNet.resnet34(input_shape, flex_layers = flex_layers, flex_mode=temp_training_name.split('-')[-1], flex_block_mode=temp_training_name.split('_')[1][4:].split('-')[0], num_classes=self.training_parameters["model_out_classes"],first_conv_flex=first_conv_flex)
-    #     elif name == 'UNet':
-    #         model = UNet(params['n_channels'], params['n_classes'], use_DP=params['use_DP'])
-    #         m_type = self.training_name.split('-')[0]
-    #         if m_type == 'UNet_Baseline':
-    #             return model
-    #         else:
-    #             layer = None
-    #             flex_type = self.training_name.split('-')[1]
-    #             if flex_type == 'DefaultFlex':
-    #                 layer = FlexLayer_DefaultFlex
-    #             elif flex_type == 'Random50_50':
-    #                 layer = FlexLayer_Random50_50
-    #             def get_flex_layer(module):
-    #                 return layer(in_channels=module.in_channels,out_channels=module.out_channels,kernel_size=module.kernel_size,stride=module.stride,padding=module.padding,img_dim=params['input_shape'])
-                
-    #             if m_type == 'UNet_All_Encoder':
-    #                 flex_layer = get_flex_layer(model.inc.double_conv[0])
-    #                 model.inc.double_conv[0] = flex_layer
-    #                 flex_layer = get_flex_layer(model.inc.double_conv[3])
-    #                 model.inc.double_conv[3] = flex_layer
-    #                 flex_layer = get_flex_layer(model.down1.maxpool_conv[1].double_conv[0])
-    #                 model.down1.maxpool_conv[1].double_conv[0] = flex_layer
-    #                 flex_layer = get_flex_layer(model.down1.maxpool_conv[1].double_conv[3])
-    #                 model.down1.maxpool_conv[1].double_conv[3] = flex_layer
-    #                 flex_layer = get_flex_layer(model.down2.maxpool_conv[1].double_conv[0])
-    #                 model.down2.maxpool_conv[1].double_conv[0] = flex_layer
-    #                 flex_layer = get_flex_layer(model.down2.maxpool_conv[1].double_conv[3])
-    #                 model.down2.maxpool_conv[1].double_conv[3] = flex_layer
-    #                 flex_layer = get_flex_layer(model.down3.maxpool_conv[1].double_conv[0])
-    #                 model.down3.maxpool_conv[1].double_conv[0] = flex_layer
-    #                 flex_layer = get_flex_layer(model.down3.maxpool_conv[1].double_conv[3])
-    #                 model.down3.maxpool_conv[1].double_conv[3] = flex_layer
-    #                 flex_layer = get_flex_layer(model.down4.maxpool_conv[1].double_conv[0])
-    #                 model.down4.maxpool_conv[1].double_conv[0] = flex_layer
-    #                 flex_layer = get_flex_layer(model.down4.maxpool_conv[1].double_conv[3])
-    #                 model.down4.maxpool_conv[1].double_conv[3] = flex_layer
-
-    #                 return model
-    #             elif m_type == 'UNet_Single_Layer':
-    #                 flex_layer = get_flex_layer(model.inc.double_conv[0])
-    #                 model.inc.double_conv[0] = flex_layer
-    #                 return model
                     
-    def get_weights_file_dir(self, m):
+    def get_weights_file_dir(self):
         # returns path + file name for a new weights file to be saved, naming it according to latest epoch metrics
-        new_filename = f"{self.training_name}_i_{len(m.per_iteration_training_losses)}_epoch_{len(m.per_epoch_training_losses)}_loss_{m.per_epoch_training_losses[-1]:.3f}.pth"
+        new_filename = f"{self.training_name}_i_{len(self.metrics.per_iteration_training_losses)}_epoch_{len(self.metrics.per_epoch_training_losses)-1}_loss_{self.metrics.per_epoch_training_losses[-1]:.3f}.pth"
         return self.weights_save_dir / self.configuration_name / new_filename
     
     def check_weights_dir(self):
@@ -213,52 +153,25 @@ class BaseConfig:
         else:
             os.remove(self.previous_weights_file)
             self.previous_weights_file = current_weights_file
-
-    def test(self, model, testloader):
-        # Fuction performing testing and returning testing accuracy
-        correct = 0
-        total = 0
-        accuracy = 0
-        model.train(False)
-        with torch.no_grad():
-            for i,(images,labels)in enumerate(tqdm(testloader)):
-                if torch.cuda.is_available():
-                    images = images.cuda()
-                    labels = labels.cuda()
-                outputs = model(Variable(images.cuda()))
-                labels = Variable(labels.cuda())
-
-                _,predicted = outputs.max(1)
-                correct = predicted.eq(labels).sum().item()
-                total = labels.size(0)
-                accuracy+=100*(correct/total)
-        return accuracy/len(testloader)
     
     def get_optimizer(self, model):
-        ml = list()
-        count =0 
-        for name, param in model.named_parameters():
-            if count == 0: #save threshold layer with different weight decay 
-                ml.append({'params': param, 'weight_decay': 0})
-                #print(name, "   decay 0")
-            else:
-                ml.append({'params': param})
-                #print(name, "   decay 0.006")
-            count +=1
-        #print("number of parameters in model", count)
         if self.params["optimiser_type"] == "SGD":
-            optimizer = torch.optim.SGD(ml,lr = self.params["optimiser_learning_rate"],momentum = self.params["optimiser_momentum"],weight_decay = self.params["optimiser_weight_decay"])
+            optimizer = torch.optim.SGD(model.named_parameters(),lr = self.params["optimiser_learning_rate"],momentum = self.params["optimiser_momentum"],weight_decay = self.params["optimiser_weight_decay"])
         elif self.params["optimiser_type"] == "Adam":
-            optimizer = torch.optim.Adam(ml,lr = self.params["optimiser_learning_rate"],weight_decay = self.params["optimiser_weight_decay"])
+            optimizer = torch.optim.Adam(model.named_parameters(),lr = self.params["optimiser_learning_rate"],weight_decay = self.params["optimiser_weight_decay"], betas=(0.9, 0.999))
         return optimizer
     
     def get_num_correct(self, preds, labels):
         return preds.argmax(dim=1).eq(labels).sum().item()
     
-    def get_scheduler(self, optimizer, max_steps):
+    def get_scheduler(self, optimizer):
         if self.params["scheduler_type"] == "StepLR":
             return torch.optim.lr_scheduler.StepLR(optimizer,step_size=self.params["scheduler_StepLR_step_size"],gamma=self.params["scheduler_StepLR_gamma"])
         elif self.params["scheduler_type"] == "WarmupCosineLR":
+            # max_steps for stepping scheduler every epoch
+            if self.params["step_scheduler_per"] == "epoch": max_steps = self.params["epochs"]
+            # max_steps for stepping scheduler every batch
+            elif self.params["step_scheduler_per"] == "batch": max_steps = int(self.params["epochs"] * self.data_shape[0]/self.params["batch_size"])
             return Optimizers.WarmupCosineLR(optimizer,max_iters=max_steps,warmup_factor=self.params["scheduler_WarmupCosineLR_warmup_factor"],warmup_iters=self.params["scheduler_WarmupCosineLR_warmup_iterations"],warmup_method="linear",last_epoch=-1,)
         elif self.params["scheduler_type"] == "CosineAnnealingWarmRestarts":
             return torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=self.params["scheduler_CosineAnnealingWarmRestarts_restart_period"], T_mult=self.params["scheduler_CosineAnnealingWarmRestarts_period_multiplier"], eta_min=self.params["scheduler_CosineAnnealingWarmRestarts_min_lr"])
@@ -266,3 +179,49 @@ class BaseConfig:
     def get_lr(self,optimizer):
         for param_group in optimizer.param_groups:
             return param_group['lr']
+        
+    def print_model_parameters(self, model):
+        total_params = sum(p.numel() for p in model.parameters())
+        print(f'{total_params:,} total parameters.')
+        total_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        print(f'{total_trainable_params:,} trainable parameters.')
+
+    def check_for_training_continuation(self, model, optimizer):
+        if self.continue_training:
+            weights_file, self.start_epoch = self.get_last_weights_file_path()
+            print("Continuing training from file:", weights_file, "| starting epoch:", self.start_epoch + 1)
+            dict = torch.load(weights_file)
+            model.load_state_dict(dict["model_state"])
+            optimizer.load_state_dict(dict['optimizer_state'])
+            self.previous_weights_file,_ = self.get_last_weights_file_path()
+
+            self.metrics.load_interrupted_iteration(self)
+        return model, optimizer
+    
+    def iteration_begin_step(self, model, optimizer):
+        self.check_weights_dir()
+        model, optimizer = self.check_for_training_continuation(model, optimizer)
+        self.print_model_parameters(model)
+        self.metrics.init_iteration()
+    
+    def epoch_begin_step(self):
+        self.metrics.init_epoch()
+    
+    def batch_end_step(self, epoch, batch_i, batch_loss, optimizer, scheduler):
+        self.metrics.batch_update(batch_loss.item())
+        if self.params["step_scheduler_per"] == "batch":
+            self.metrics.save_lr_metrics(self,epoch,batch_i,self.get_lr(optimizer),batch_loss.item())
+            scheduler.step() # per batch lr + loss logging + per batch scheduler step
+    
+    def epoch_end_step(self, epoch, batch_loss, optimizer, scheduler, model, loss_hist):
+        if self.params["step_scheduler_per"] == "epoch":
+            self.metrics.save_lr_metrics(self,epoch,0,self.get_lr(optimizer),batch_loss.item())
+            scheduler.step() # per epoch lr + loss logging + per epoch scheduler step
+        self.metrics.epoch_update()
+        self.save_at_checkpoint(epoch,model.state_dict(),optimizer.state_dict(),scheduler.state_dict(),loss_hist,self.get_weights_file_dir())
+        self.metrics.epoch_end_print()
+        self.metrics.save_metrics(self)
+
+    def iteration_end_step(self):
+        self.metrics.iteration_update()
+        print('Training completed.')
