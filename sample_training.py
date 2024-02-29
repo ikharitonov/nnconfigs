@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
+import sys
 import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torch.nn as nn
-from torch.autograd import Variable
 from tqdm import tqdm
-from torch.cuda.amp import autocast
 
-import Metrics
-import Config
+import CustomConfig
 
 def run():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -25,7 +23,7 @@ def run():
         ]))
 
     trainloader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=config.training_parameters["batch_size"], shuffle= True,
+        train_dataset, batch_size=config.training_parameters["batch_size"], shuffle=True,
         num_workers=config.training_parameters["dataloader_num_workers"], pin_memory=config.training_parameters["dataloader_pin_memory"])
 
     testloader = torch.utils.data.DataLoader(
@@ -38,71 +36,35 @@ def run():
         batch_size=config.training_parameters["batch_size"], shuffle=True,
         num_workers=config.training_parameters["dataloader_num_workers"], pin_memory=config.training_parameters["dataloader_pin_memory"])
 
-    config.check_weights_dir()
-
-    metrics = Metrics()
+    config.data_shape = next(iter(trainloader)).shape
 
     for iteration in range(config.training_parameters["iterations"]):
-        model = config.get_model().to("cuda")
+        model = Model1()
         criterion = nn.CrossEntropyLoss()
         optimizer = config.get_optimizer(model)
-        
-        max_steps = 0
-        if config.training_parameters["step_scheduler_per"] == "epoch": max_steps = config.training_parameters["epochs"] # for stepping scheduler every epoch
-        elif config.training_parameters["step_scheduler_per"] == "batch": max_steps = config.training_parameters["epochs"] * len(trainloader) # for stepping scheduler every batch
-        schedule = config.get_scheduler(optimizer,max_steps)
+        scheduler = config.get_scheduler(optimizer)
 
-        # from https://pytorch.org/docs/stable/notes/amp_examples.html
-        scaler = torch.cuda.amp.GradScaler()
+        model, optimizer = config.iteration_begin_step(model, optimizer)
 
-        start_epoch = 0
-        if config.continue_training:
-            weights_file, start_epoch = config.get_last_weights_file_path()
-            print("Continuing training from file:", weights_file, "| starting epoch:", start_epoch + 1)
-            dict = torch.load(weights_file)
-            model.load_state_dict(dict["model_state"])
-            optimizer.load_state_dict(dict['optimizer_state'])
-            config.previous_weights_file,_ = config.get_last_weights_file_path()
-
-        total_params = sum(p.numel() for p in model.parameters())
-        print(f'{total_params:,} total parameters.')
-        total_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        print(f'{total_trainable_params:,} trainable parameters.')
-        
-        metrics.init_iteration()
-        if config.continue_training: metrics.load_interrupted_iteration(config)
-
-        for epoch in range(start_epoch, config.training_parameters["epochs"]):
+        for epoch in range(config.start_epoch, config.training_parameters["epochs"]):
+            config.epoch_begin_step()
             model.train(True)
-            metrics.init_epoch()
-            for i, data in enumerate(tqdm(trainloader)):
+            for batch_i, data in enumerate(tqdm(trainloader)):
                 inputs, labels = data
-                if torch.cuda.is_available():
-                    inputs = inputs.cuda()
-                    labels = labels.cuda()
-                optimizer.zero_grad(set_to_none=True)
-                with autocast():
-                    preds = model(Variable(inputs.cuda()))
-                    loss = criterion(preds.cuda(), labels.cuda())
-                # loss.backward()
-                scaler.scale(loss).backward()
-                # optimizer.step()
-                scaler.step(optimizer)
-                scaler.update()
-                _,predicted = preds.max(1)
 
-                metrics.batch_update(predicted.eq(labels).sum().item(), labels.size(0), loss.item())
-                if config.training_parameters["step_scheduler_per"] == "batch": metrics.save_lr_metrics(config,epoch,i,config.get_lr(optimizer),loss.item()) # per batch lr + loss logging
-                if config.training_parameters["step_scheduler_per"] == "batch": schedule.step() # per batch scheduler step
-            if config.training_parameters["step_scheduler_per"] == "epoch": metrics.save_lr_metrics(config,epoch,0,config.get_lr(optimizer),loss.item()) # per epoch lr + loss logging
-            if config.training_parameters["step_scheduler_per"] == "epoch": schedule.step() # per epoch scheduler step
-            metrics.epoch_update(config.test(model, testloader))
-            config.save_at_checkpoint(epoch,model.state_dict(),optimizer.state_dict(),schedule.state_dict(),metrics.per_epoch_training_accuracies[-1],metrics.per_epoch_testing_accuracies[-1],config.get_weights_file_dir(metrics))
-            metrics.epoch_end_print()
-            metrics.save_metrics(config)
-        metrics.iteration_update()
+                optimizer.zero_grad(set_to_none=True)
+
+                predictions = model(inputs.cuda())
+                loss = criterion(predictions.cuda(), labels.cuda())
+
+                loss.backward()
+                optimizer.step()
+
+                config.batch_end_step(epoch, batch_i, loss, optimizer, scheduler)
+            config.epoch_end_step(epoch=epoch, batch_loss=loss, optimizer=optimizer, scheduler=scheduler, model=model)
+        config.iteration_end_step()
 
 if __name__ == '__main__':
-    # config = get_config(sys.argv)
-    config = Config.ImageNet_Local_Config(model_name="ResNet34", dataset_name="ImageNet", configuration_name="config1", continue_training=False)
+    config = CustomConfig(cli_args=sys.argv)
+    # config = CustomConfig(model_name="Model1", dataset_name="Dataset1", configuration_name="config1", configuration_file="/path/to/config1.txt" continue_training=False)
     run()
