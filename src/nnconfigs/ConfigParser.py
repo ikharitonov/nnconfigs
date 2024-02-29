@@ -77,7 +77,7 @@ class ConfigParser:
             value = None
             if line_elements[1][0] == '"':
                 value = line_elements[1].split('"')[1]
-            elif '.' in line_elements[1]:
+            elif '.' in line_elements[1] or 'e-' in line_elements[1]:
                 value = float(line_elements[1])
             elif line_elements[1] in ['true','True','"true"','"True"']:
                 value = True
