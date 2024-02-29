@@ -136,7 +136,7 @@ class BaseConfig:
             exit()
         return p / file_list[epoch_list.index(max(epoch_list))], max(epoch_list)
     
-    def save_at_checkpoint(self,epoch,model_state_dict,optimizer_state_dict,scheduler_state_dict,loss_history,current_weights_file,training_accuracy=None,testing_accuracy=None):
+    def save_at_checkpoint(self,current_weights_file=None,epoch=None,model_state_dict=None,optimizer_state_dict=None,scheduler_state_dict=None,loss_history=None,training_accuracy=None,testing_accuracy=None):
         # This function saves the model weights at every epoch and deletes the previous epoch weights, unless it's epoch 1 or a checkpoint
         state = {
                 'epoch': epoch,
@@ -213,12 +213,12 @@ class BaseConfig:
             self.metrics.save_lr_metrics(self,epoch,batch_i,self.get_lr(optimizer),batch_loss.item())
             scheduler.step() # per batch lr + loss logging + per batch scheduler step
     
-    def epoch_end_step(self, epoch, batch_loss, optimizer, scheduler, model, loss_hist):
+    def epoch_end_step(self, epoch=None, batch_loss=None, optimizer=None, scheduler=None, model=None, loss_history=None):
         if self.params["step_scheduler_per"] == "epoch":
             self.metrics.save_lr_metrics(self,epoch,0,self.get_lr(optimizer),batch_loss.item())
             scheduler.step() # per epoch lr + loss logging + per epoch scheduler step
         self.metrics.epoch_update()
-        self.save_at_checkpoint(epoch,model.state_dict(),optimizer.state_dict(),scheduler.state_dict(),loss_hist,self.get_weights_file_dir())
+        self.save_at_checkpoint(current_weights_file=self.get_weights_file_dir(),epoch=epoch,model_state_dict=model.state_dict(),optimizer_state_dict=optimizer.state_dict(),scheduler_state_dict=scheduler.state_dict(),loss_history=loss_history)
         self.metrics.epoch_end_print()
         self.metrics.save_metrics(self)
 
