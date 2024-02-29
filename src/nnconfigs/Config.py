@@ -19,7 +19,7 @@ def get_cli_args(args):
 
     if len(args) > 1:
         if args[1]=='--help':
-            print("PARAMERES:")
+            print("PARAMETERS:")
             print("--model_name : the name for the model to be trained")
             print("--dataset_name : the name for the dataset to train on")
             print("--configuration_name : training config, assumed to be the same as filename provided in configuration_file in e.g. \"config1\" (default)")

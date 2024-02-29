@@ -24,7 +24,9 @@ pip install -e .
 ### How to use
 
 The main way to use __nnconfigs__ is through the command line, e.g.:
-```python example_training.py --model_name Model1 --dataset_name Dataset1 --configuration_name=config1 --configuration_file=/path/to/config1.txt --continue_training False```
+```python
+python example_training.py --model_name Model1 --dataset_name Dataset1 --configuration_name=config1 --configuration_file=/path/to/config1.txt --continue_training False
+```
 For more info, type ```python example_training.py --help```. For the necessary format of the training script, see the provided _example\_training.py_ file.
 
 Of course, scripts can also be run through an IDE by swapping
