@@ -77,10 +77,8 @@ class BaseConfig:
         self.running_machine = socket.gethostname()
         self.weights_save_dir = self.base_path / self.training_name
         self.previous_weights_file = ''
-        # self.training_parameters = {} # initialized in child classes
-        self.parser = ConfigParser.ConfigParser(configuration_file, self)
+        self.parser = ConfigParser(configuration_file, self)
         self.params = self.parser.training_parameters
-        # self.save_checkpoints = [1,25,50,75,100,125,150,175,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000,3100,3200,3300,3400,3500,3600,3700,3800,3900,4000]
         self.save_checkpoints = [x for x in range(self.params["epochs"])]
         self.data_shape = None
         self.start_epoch = 0
@@ -90,7 +88,7 @@ class BaseConfig:
         self.weights_save_dir = self.base_path + self.slash + self.training_name + self.weights_dataset_name + self.slash
     
     def update_training_parameters(self):
-        self.parser = ConfigParser.ConfigParser('void', self)
+        self.parser = ConfigParser('void', self)
         self.params = self.parser.training_parameters
                     
     def get_weights_file_dir(self):
