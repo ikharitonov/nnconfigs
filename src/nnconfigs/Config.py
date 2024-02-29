@@ -3,12 +3,9 @@
 import os
 import socket
 import torch
-# import numpy as np
-# from pathlib import Path
-# from torch.autograd import Variable
-import Optimizers as Optimizers
-import ConfigParser as ConfigParser
-from Metrics import Metrics
+from .Optimizers import *
+from .ConfigParser import ConfigParser
+from .Metrics import Metrics
 
 def get_cli_args(args):
 
@@ -172,7 +169,7 @@ class BaseConfig:
             if self.params["step_scheduler_per"] == "epoch": max_steps = self.params["epochs"]
             # max_steps for stepping scheduler every batch
             elif self.params["step_scheduler_per"] == "batch": max_steps = int(self.params["epochs"] * self.data_shape[0]/self.params["batch_size"])
-            return Optimizers.WarmupCosineLR(optimizer,max_iters=max_steps,warmup_factor=self.params["scheduler_WarmupCosineLR_warmup_factor"],warmup_iters=self.params["scheduler_WarmupCosineLR_warmup_iterations"],warmup_method="linear",last_epoch=-1,)
+            return WarmupCosineLR(optimizer,max_iters=max_steps,warmup_factor=self.params["scheduler_WarmupCosineLR_warmup_factor"],warmup_iters=self.params["scheduler_WarmupCosineLR_warmup_iterations"],warmup_method="linear",last_epoch=-1,)
         elif self.params["scheduler_type"] == "CosineAnnealingWarmRestarts":
             return torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=self.params["scheduler_CosineAnnealingWarmRestarts_restart_period"], T_mult=self.params["scheduler_CosineAnnealingWarmRestarts_period_multiplier"], eta_min=self.params["scheduler_CosineAnnealingWarmRestarts_min_lr"])
     

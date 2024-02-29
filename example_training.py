@@ -7,7 +7,7 @@ import torchvision.datasets as datasets
 import torch.nn as nn
 from tqdm import tqdm
 
-import CustomConfig
+from ExampleConfig import ExampleConfig
 
 def run():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -65,6 +65,6 @@ def run():
         config.iteration_end_step()
 
 if __name__ == '__main__':
-    config = CustomConfig(cli_args=sys.argv)
-    # config = CustomConfig(model_name="Model1", dataset_name="Dataset1", configuration_name="config1", configuration_file="/path/to/config1.txt" continue_training=False)
+    config = ExampleConfig(cli_args=sys.argv)
+    # config = ExampleConfig(model_name="Model1", dataset_name="Dataset1", configuration_name="config1", configuration_file="/path/to/config1.txt" continue_training=False)
     run()
