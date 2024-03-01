@@ -7,6 +7,11 @@ from .Optimizers import *
 from .ConfigParser import ConfigParser
 from .Metrics import Metrics
 
+"""
+TODO:
+Load scheduler state in check_for_training_continuation()
+"""
+
 def get_cli_args(args):
 
     out_dict = {}
@@ -151,9 +156,9 @@ class BaseConfig:
     
     def get_optimizer(self, model):
         if self.params["optimiser_type"] == "SGD":
-            optimizer = torch.optim.SGD(model.named_parameters(),lr = self.params["optimiser_learning_rate"],momentum = self.params["optimiser_momentum"],weight_decay = self.params["optimiser_weight_decay"])
+            optimizer = torch.optim.SGD(model.parameters(),lr = self.params["optimiser_learning_rate"],momentum = self.params["optimiser_momentum"],weight_decay = self.params["optimiser_weight_decay"])
         elif self.params["optimiser_type"] == "Adam":
-            optimizer = torch.optim.Adam(model.named_parameters(),lr = self.params["optimiser_learning_rate"],weight_decay = self.params["optimiser_weight_decay"], betas=(0.9, 0.999))
+            optimizer = torch.optim.Adam(model.parameters(),lr = self.params["optimiser_learning_rate"],weight_decay = self.params["optimiser_weight_decay"], betas=(0.9, 0.999))
         return optimizer
     
     def get_num_correct(self, preds, labels):
@@ -181,24 +186,28 @@ class BaseConfig:
         total_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
         print(f'{total_trainable_params:,} trainable parameters.')
 
-    def check_for_training_continuation(self, model, optimizer):
+    def check_for_training_continuation(self, model, optimizer, weights_file):
+        dict = None
         if self.continue_training:
-            weights_file, self.start_epoch = self.get_last_weights_file_path()
-            print("Continuing training from file:", weights_file, "| starting epoch:", self.start_epoch + 1)
+            if weights_file:
+                print("Continuing training from file:", weights_file)
+            else:
+                weights_file, self.start_epoch = self.get_last_weights_file_path()
+                print("Continuing training from file:", weights_file, "| starting epoch:", self.start_epoch + 1)
             dict = torch.load(weights_file)
             model.load_state_dict(dict["model_state"])
             optimizer.load_state_dict(dict['optimizer_state'])
             self.previous_weights_file,_ = self.get_last_weights_file_path()
 
             self.metrics.load_interrupted_iteration(self)
-        return model, optimizer
+        return model, optimizer, dict
     
-    def iteration_begin_step(self, model, optimizer):
+    def iteration_begin_step(self, model, optimizer, specify_weights_file=None):
         self.check_weights_dir()
-        model, optimizer = self.check_for_training_continuation(model, optimizer)
+        model, optimizer, dict = self.check_for_training_continuation(model, optimizer, specify_weights_file)
         self.print_model_parameters(model)
         self.metrics.init_iteration()
-        return model, optimizer
+        return model, optimizer, dict
     
     def epoch_begin_step(self):
         self.metrics.init_epoch()
