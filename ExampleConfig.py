@@ -5,6 +5,7 @@ class ExampleConfig(BaseConfig):
     def __init__(self, cli_args=None, model_name=None, dataset_name=None, configuration_name=None, configuration_file=None, continue_training=False):
 
         self.base_path = Path('/path/to/model/configurations/and/weights/folder')
+        self.default_config_path = Path('/path/to/example_config.txt')
         
         super().__init__(cli_args, model_name, dataset_name, configuration_name, configuration_file, continue_training)
 

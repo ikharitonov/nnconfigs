@@ -38,10 +38,14 @@ def get_cli_args(args):
             """
             raise NotImplementedError("not implemented")
 
-    for key in out_dict.keys():
+    # for key in out_dict.keys():
+    for key in ['model_name', 'dataset_name', 'configuration_name']: # Must-have information
         if key not in args and f"--{key}" not in args and f"-{key}" not in args:
             print(f"Error: {key} missing from the command line arguments. Exiting.")
             exit()
+    for key in ['configuration_file', 'continue_training']:
+        if key not in args and f"--{key}" not in args and f"-{key}" not in args:
+            print(f"Warning: {key} missing from the command line arguments. Using default value/s.")
 
     for i in range(1,len(args),2):
         if args[i]=='--model_name':

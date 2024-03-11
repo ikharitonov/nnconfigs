@@ -23,8 +23,8 @@ def run():
         ]))
 
     trainloader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=config.training_parameters["batch_size"], shuffle=True,
-        num_workers=config.training_parameters["dataloader_num_workers"], pin_memory=config.training_parameters["dataloader_pin_memory"])
+        train_dataset, batch_size=config.params["batch_size"], shuffle=True,
+        num_workers=config.params["dataloader_num_workers"], pin_memory=config.params["dataloader_pin_memory"])
 
     testloader = torch.utils.data.DataLoader(
         datasets.ImageFolder(config.dirs["testing"], transforms.Compose([
@@ -33,12 +33,12 @@ def run():
             transforms.ToTensor(),
             normalize,
         ])),
-        batch_size=config.training_parameters["batch_size"], shuffle=True,
-        num_workers=config.training_parameters["dataloader_num_workers"], pin_memory=config.training_parameters["dataloader_pin_memory"])
+        batch_size=config.params["batch_size"], shuffle=True,
+        num_workers=config.params["dataloader_num_workers"], pin_memory=config.params["dataloader_pin_memory"])
 
     config.data_shape = next(iter(trainloader)).shape
 
-    for iteration in range(config.training_parameters["iterations"]):
+    for iteration in range(config.params["iterations"]):
         model = Model1()
         criterion = nn.CrossEntropyLoss()
         optimizer = config.get_optimizer(model)
@@ -46,7 +46,7 @@ def run():
 
         model, optimizer = config.iteration_begin_step(model, optimizer)
 
-        for epoch in range(config.start_epoch, config.training_parameters["epochs"]):
+        for epoch in range(config.start_epoch, config.params["epochs"]):
             config.epoch_begin_step()
             model.train(True)
             for batch_i, data in enumerate(tqdm(trainloader)):

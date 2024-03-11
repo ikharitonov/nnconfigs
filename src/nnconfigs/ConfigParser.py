@@ -1,39 +1,6 @@
 #!/usr/bin/env python3
 import os
 
-class ValidParameters:
-    """
-    TODO: implement checking against a predefined list of accepted parameters e.g. StepLR / WarmupCosineLR / CosineAnnealingWarmRestarts
-
-    reference:
-    self.training_parameters = {"image_dim": 224,
-                                        "input_channels": 3,
-                                        "batch_size": 40,
-                                        "iterations": 1,
-                                        "epochs": 100,
-                                        "model_out_classes": 2,
-                                        "distribured_mode": "DP", # DP for DataParallel and DDP for DistributedDataParallel
-                                        "ddp_world_size": 1,
-                                        "ddp_backend_type": "nccl", # nccl or gloo
-                                        "optimiser_type": "Adam", # SGD or Adam
-                                        "optimiser_learning_rate": 0.0002,
-                                        "optimiser_momentum": 0.9,
-                                        "optimiser_weight_decay": 0.006,
-                                        "dataloader_num_workers": 2,
-                                        "dataloader_pin_memory": True,
-                                        "scheduler_type": "WarmupCosineLR", # StepLR or WarmupCosineLR or CosineAnnealingWarmRestarts
-                                        "scheduler_StepLR_step_size": 5,
-                                        "scheduler_StepLR_gamma": 0.7,
-                                        "scheduler_WarmupCosineLR_warmup_factor": 0.001,
-                                        "scheduler_WarmupCosineLR_warmup_iterations": 3,
-                                        "scheduler_CosineAnnealingWarmRestarts_restart_period": 10,
-                                        "scheduler_CosineAnnealingWarmRestarts_period_multiplier": 1,
-                                        "scheduler_CosineAnnealingWarmRestarts_min_lr": 0,
-                                        "step_scheduler_per": "epoch"} # batch or epoch
-
-    """
-    pass
-
 class ConfigParser:
     def __init__(self, configuration_file, config):
         """
@@ -53,19 +20,16 @@ class ConfigParser:
         if not self.configuration_file:
             print("ConfigParser: Configuration file was not provided. Using default configuration for \""+self.config.training_name+"\".")
             self.loading_defaults = True
-            raise NotImplementedError('Default configurations are not generally implemented.')
-            # self.load_default_config()
+            self.load_default_config()
         elif not os.path.isfile(self.configuration_file):
-            print("ConfigParser: Configuration file with provided name was not found. Using default configuration for \""+self.config.training_name+"\".")
-            self.loading_defaults = True
-            raise NotImplementedError('Default configurations are not generally implemented.')
-            # self.load_default_config()
+            print("ConfigParser: Configuration file with provided name was not found. Please make sure file exists.")
+            exit()
         else:
-            self.parse_txt_contents(self.configuration_file)
+            self.load_default_config() # to ensure no parameters are missing - using default values
+            self.parse_txt_contents(self.configuration_file) # updating training_parameters dictionary with the relevant parameters
     
     def load_default_config(self):
-        pass
-        # self.parse_txt_contents(os.path.dirname(__file__) + self.config.slash + 'DefaultConfigs' + self.config.slash + self.config.name + '.txt')
+        self.parse_txt_contents(self.config.default_config_path)
 
     def parse_txt_contents(self,path):
         lines = []
