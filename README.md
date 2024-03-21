@@ -40,7 +40,7 @@ config = ExampleConfig(model_name="Model1", dataset_name="Dataset1", configurati
 
 Lastly, you must create two additional files. First is a _.py_ file with a custom config class, extending the _nnconfigs.Config.BaseConfig_. By default, it should define the directories for data, default configurations and model checkpoints, but any other custom functionality may be included (see Config.py to see what's already implemented). Second is a _.txt_ file with the default values for all parameters used in your training script/s. In case new parameters are added, ensure that the listing in this file is complete.
 
-TL;DR: make sure your training script looks like _example\_training.py_ and create your own custom copies of _ExampleConfig.py_ and _example\_config.txt_.
+__TL;DR__: make sure your training script looks like _example\_training.py_ and create your own custom copies of _ExampleConfig.py_ and _example\_config.txt_.
 
 ### Extra: batch execution
 
