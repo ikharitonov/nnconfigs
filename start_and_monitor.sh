@@ -30,4 +30,4 @@ echo "Started $configuration_name with PID $pid"
 ) &
 
 wait $pid  # Wait for the process to complete
-echo "Process $pid: $configuration_name has finished."  # Echo text after the process finishes
+echo "Process $pid: $configuration_name has finished."  # Output text after the process finishes

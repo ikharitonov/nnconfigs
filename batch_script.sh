@@ -3,83 +3,41 @@
 echo "SCRIPT STARTED:"
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt"
-
-kill_process_output="nan"
-log_datetime=$(date '+%d_%m_%Y_%H_%M_%S');
-temp_log_directory="/home/ikharitonov/Desktop/temp_logs_$log_datetime"
-mkdir "$temp_log_directory"
-
-# Function to start a Python script and monitor its output
-start_and_monitor() {
-    local script_path=$1
-    local model_name=$2
-    local dataset_name=$3
-    local configuration_name=$4
-    local configuration_file=$5
-    local continue_training=$6
-    local output_file="${configuration_name}_output.log"
-
-    # Start the Python script and redirect its output to a log file
-    echo $script_path
-    python "$script_path" "--model_name" "$model_name" "--dataset_name" "$dataset_name" "--configuration_name" "$configuration_name" "--configuration_file" "$configuration_file" "--continue_training" "$continue_training" > "$temp_log_directory/$output_file" &
-    # python "$script_path" &
-    local pid=$!
-
-    echo "Started $script_path with PID $pid"
-
-    # Launch a background job for monitoring
-    (
-        while kill -0 $pid 2>/dev/null; do
-            if grep -q "$kill_process_output" "$temp_log_directory/$output_file"; then
-                echo "'$kill_process_output' output detected in $configuration_name, killing process..."
-                kill $pid
-                break
-            fi
-            sleep 1 # Adjust sleep duration as needed
-        done
-    ) &
-}
-
-# Function to manage launching scripts with concurrency control
-launch_scripts() {
-    local maxjobs=$1
-
-    # Read script configurations from the CSV file
-    awk -F, '(NR>1) {print $1 " " $2 " " $3 " " $4 " " $5 " " $6}' $config_file | while read script_path model_name dataset_name configuration_name configuration_file continue_training
-    do
-        # Ensure the number of concurrent jobs does not exceed maxjobs
-        while [ $(jobs -p | wc -l) -ge $maxjobs ]; do
-            wait -n
-        done
-
-        # Start and monitor the Python script
-        start_and_monitor "$script_path" "$model_name" "$dataset_name" "$configuration_name" "$configuration_file" "$continue_training"
-    done
-
-    # Wait for all background jobs to finish
-    wait
-}
+working_dir=$(pwd)
 
 # Getting the command line parameters
-while getopts m:c:f:e: flag
+while getopts m:f:e:l flag
 do
     case "${flag}" in
         m) maxjobs=${OPTARG};;
-        c) killcondition=${OPTARG};;
         f) config_file=${OPTARG};;
         e) anaconda_environment=${OPTARG};;
+        l) temp_logs_directory=${OPTARG};;
     esac
 done
 
+# Creating the temporary logs folder
+log_datetime=$(date '+%d_%m_%Y_%H_%M_%S');
+# temp_logs_folder="$temp_logs_directory/temp_logs_$log_datetime"
+cd $temp_logs_directory
+temp_logs_directory=$(pwd)
+temp_logs_folder="temp_logs_$log_datetime"
+mkdir $temp_logs_folder
+
+# Activating anaconda environment
 eval "$(conda shell.bash hook)"
 conda activate "$anaconda_environment"
 echo "Activated '$anaconda_environment' anaconda environment."
 
-# Launch scripts with concurrency control
-launch_scripts $maxjobs
+# Saving the contents of csv file into a temporary space-separated text file
+awk -F, '(NR>1) {print $1 " " $2 " " $3 " " $4 " " $5 " " $6}' $config_file >> "$temp_logs_folder/temp_arguments.txt"
 
+# Loading the contents of the text file into xargs and launching each script concurrently
+cat $temp_logs_folder/temp_arguments.txt | xargs -L 1 -P "$maxjobs" -I {} bash -c ''"$working_dir"'/start_and_monitor.sh $0 '"$temp_logs_directory/$temp_logs_folder" '{}'
+
+wait
 echo "All scripts have completed or been terminated."
-# rm -rf "$temp_log_directory"
+rm -rf "$temp_logs_folder"
 echo "SCRIPT FINISHED:"
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt"
