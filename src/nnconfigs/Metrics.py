@@ -46,7 +46,7 @@ class Metrics:
         if os.path.isfile(file_path):
             f = open(file_path, "a")
             # f.write(str(len(self.per_iteration_training_accuracies)) + ',' + str(len(self.per_epoch_training_accuracies)) + ',' + str(float(self.per_epoch_training_accuracies[-1])) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + str(float(self.per_epoch_testing_accuracies[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
-            f.write(str(len(self.per_iteration_training_losses)) + ',' + str(len(self.per_epoch_training_losses)) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
+            f.write(str(len(self.per_iteration_training_losses)) + ',' + str(len(self.per_epoch_training_losses)-1) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
             f.close()
         else:
             f = open(file_path, "x")
@@ -54,7 +54,7 @@ class Metrics:
             # f.write("Iteration,Epoch,Training Accuracy,Training Loss,Testing Accuracy,Runtime,Date and Time,Machine" + "\n")
             # f.write(str(len(self.per_iteration_training_accuracies)) + ',' + str(len(self.per_epoch_training_accuracies)) + ',' + str(float(self.per_epoch_training_accuracies[-1])) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + str(float(self.per_epoch_testing_accuracies[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
             f.write("Iteration,Epoch,Training Loss,Runtime,Date and Time,Machine" + "\n")
-            f.write(str(len(self.per_iteration_training_losses)) + ',' + str(len(self.per_epoch_training_losses)) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
+            f.write(str(len(self.per_iteration_training_losses)) + ',' + str(len(self.per_epoch_training_losses)-1) + ',' + str(float(self.per_epoch_training_losses[-1])) + ',' + self.get_epoch_runtime() + ',' + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ',' + c.running_machine + "\n")
             f.close()
     def load_interrupted_iteration(self,c):
         file_path = c.weights_save_dir / c.configuration_name / "metrics.csv"

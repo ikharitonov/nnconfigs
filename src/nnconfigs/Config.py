@@ -196,8 +196,9 @@ class BaseConfig:
             if weights_file:
                 print("Continuing training from file:", weights_file)
             else:
-                weights_file, self.start_epoch = self.get_last_weights_file_path()
-                print("Continuing training from file:", weights_file, "| starting epoch:", self.start_epoch + 1)
+                weights_file, latest_epoch = self.get_last_weights_file_path()
+                self.start_epoch = latest_epoch + 1
+                print("Continuing training from file:", weights_file, "| starting epoch:", self.start_epoch)
             dict = torch.load(weights_file)
             model.load_state_dict(dict["model_state"])
             optimizer.load_state_dict(dict['optimizer_state'])
