@@ -208,9 +208,9 @@ class BaseConfig:
     
     def iteration_begin_step(self, model, optimizer, specify_weights_file=None):
         self.check_weights_dir()
+        self.metrics.init_iteration()
         model, optimizer, dict = self.check_for_training_continuation(model, optimizer, specify_weights_file)
         self.print_model_parameters(model)
-        self.metrics.init_iteration()
         return model, optimizer, dict
     
     def epoch_begin_step(self):
