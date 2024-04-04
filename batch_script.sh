@@ -18,7 +18,6 @@ done
 
 # Creating the temporary logs folder
 log_datetime=$(date '+%d_%m_%Y_%H_%M_%S');
-# temp_logs_folder="$temp_logs_directory/temp_logs_$log_datetime"
 cd $temp_logs_directory
 temp_logs_directory=$(pwd)
 temp_logs_folder="temp_logs_$log_datetime"

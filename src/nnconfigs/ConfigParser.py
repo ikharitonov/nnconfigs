@@ -3,11 +3,7 @@ import os
 
 class ConfigParser:
     def __init__(self, configuration_file, config):
-        """
-        TODO: when continuing training and trying to load from configN.txt file:
-            1) if it's not there, try to load them from metrics
-            2) if not all config parameters are present, load the rest from default configs
-        """
+
         self.configuration_file = configuration_file
         self.config = config
         self.training_parameters = {}

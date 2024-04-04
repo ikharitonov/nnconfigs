@@ -7,11 +7,6 @@ from .Optimizers import *
 from .ConfigParser import ConfigParser
 from .Metrics import Metrics
 
-"""
-TODO:
-Load scheduler state in check_for_training_continuation()
-"""
-
 def get_cli_args(args):
 
     out_dict = {}
