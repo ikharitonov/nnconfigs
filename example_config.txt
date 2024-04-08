@@ -21,4 +21,7 @@ scheduler_WarmupCosineLR_warmup_iterations:3
 scheduler_CosineAnnealingWarmRestarts_restart_period:10
 scheduler_CosineAnnealingWarmRestarts_period_multiplier:1
 scheduler_CosineAnnealingWarmRestarts_min_lr:0
+scheduler_ReduceLROnPlateau_factor:0.1
+scheduler_ReduceLROnPlateau_patience:10
+scheduler_ReduceLROnPlateau_threshold:0.0001
 step_scheduler_per:"epoch"

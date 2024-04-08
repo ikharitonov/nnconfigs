@@ -164,17 +164,20 @@ class BaseConfig:
         return preds.argmax(dim=1).eq(labels).sum().item()
     
     def get_scheduler(self, optimizer):
-        if self.params["scheduler_type"] == "StepLR":
+        if self.params["scheduler_type"].lower() == "steplr":
             return torch.optim.lr_scheduler.StepLR(optimizer,step_size=self.params["scheduler_StepLR_step_size"],gamma=self.params["scheduler_StepLR_gamma"])
-        elif self.params["scheduler_type"] == "WarmupCosineLR":
+        elif self.params["scheduler_type"].lower() == "warmupcosinelr":
             # max_steps for stepping scheduler every epoch
             if self.params["step_scheduler_per"] == "epoch": max_steps = self.params["epochs"]
             # max_steps for stepping scheduler every batch
             elif self.params["step_scheduler_per"] == "batch": max_steps = int(self.params["epochs"] * self.data_shape[0]/self.params["batch_size"])
             return WarmupCosineLR(optimizer,max_iters=max_steps,warmup_factor=self.params["scheduler_WarmupCosineLR_warmup_factor"],warmup_iters=self.params["scheduler_WarmupCosineLR_warmup_iterations"],warmup_method="linear",last_epoch=-1,)
-        elif self.params["scheduler_type"] == "CosineAnnealingWarmRestarts":
+        elif self.params["scheduler_type"].lower() == "cosineannealingwarmrestarts":
             return torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=self.params["scheduler_CosineAnnealingWarmRestarts_restart_period"], T_mult=self.params["scheduler_CosineAnnealingWarmRestarts_period_multiplier"], eta_min=self.params["scheduler_CosineAnnealingWarmRestarts_min_lr"])
-    
+        elif self.params["scheduler_type"].lower() == "reducelronplateau":
+            return torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=self.params["scheduler_ReduceLROnPlateau_factor"], patience=self.params["scheduler_ReduceLROnPlateau_patience"], threshold=self.params["scheduler_ReduceLROnPlateau_threshold"])
+            
+
     def get_lr(self,optimizer):
         for param_group in optimizer.param_groups:
             return param_group['lr']
