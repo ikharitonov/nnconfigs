@@ -219,12 +219,18 @@ class BaseConfig:
         self.metrics.batch_update(batch_loss.item())
         if self.params["step_scheduler_per"] == "batch":
             self.metrics.save_lr_metrics(self,epoch,batch_i,self.get_lr(optimizer),batch_loss.item()) # per batch lr + loss logging
-            scheduler.step() # per batch scheduler step
-    
+            if self.params["scheduler_type"].lower() == "reducelronplateau":
+                scheduler.step(batch_loss)
+            else:  
+                scheduler.step() # per batch scheduler step
+
     def epoch_end_step(self, epoch=None, batch_loss=None, optimizer=None, scheduler=None, model=None, loss_history=None):
         if self.params["step_scheduler_per"] == "epoch":
             self.metrics.save_lr_metrics(self,epoch,0,self.get_lr(optimizer),batch_loss.item()) # per epoch lr + loss logging
-            scheduler.step() # per epoch scheduler step
+            if self.params["scheduler_type"].lower() == "reducelronplateau":
+                scheduler.step(batch_loss)
+            else:    
+                scheduler.step() # per epoch scheduler step
         self.metrics.epoch_update()
         self.save_at_checkpoint(current_weights_file=self.get_weights_file_dir(),epoch=epoch,model_state_dict=model.state_dict(),optimizer_state_dict=optimizer.state_dict(),scheduler_state_dict=scheduler.state_dict(),loss_history=loss_history)
         self.metrics.epoch_end_print()
